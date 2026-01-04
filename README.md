@@ -8,6 +8,15 @@ Installation:
 ### sudo chmod +x /usr/local/bin/beesting 
 
 Now ready to go run as like other tool from any directory.
+
+### Usage: 
+# Quick scan
+sudo beesting
+# Choose option 4 → Select command 1 → Enter target
+
+# Batch execution
+sudo beesting
+# Choose option 5 → Enter: 49,65,73
 ---------------------------------------------------------------------------------------------------------------------
 If you face any issue, anything improvment, any criticism or giving thanks. please contact me via my linkedin profile.
 
