@@ -1,7 +1,7 @@
 ### For manual install if you think no need to install all those tools which include with, nmap masscan nikto sqlmap hydra john hashcat wpscan gobuster feroxbuster dirb amass ffuf jq subfinder httpx nuclei waybackurls gau.
 
 Installation: 
-### sudo git clone https://github.com/x0BeeSting/beesting.git \
+### sudo git clone https://github.com/x0BeeSting/beesting.git 
 ### cd beesting \
 ### sudo go build -o beesting beesting.go \
 ### sudo cp beesting /usr/local/bin/ \
