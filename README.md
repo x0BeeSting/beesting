@@ -2,10 +2,10 @@
 
 Installation: 
 ### sudo git clone https://github.com/x0BeeSting/beesting.git 
-### cd beesting \
-### sudo go build -o beesting beesting.go \
-### sudo cp beesting /usr/local/bin/ \
-### sudo chmod +x /usr/local/bin/beesting \
+### cd beesting 
+### sudo go build -o beesting beesting.go 
+### sudo cp beesting /usr/local/bin/ 
+### sudo chmod +x /usr/local/bin/beesting 
 
 Now ready to go run as like other tool from any directory.
 ---------------------------------------------------------------------------------------------------------------------
