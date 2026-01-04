@@ -32,7 +32,8 @@ func printBanner() {
 ║              Vulnerability Scanning & CVE Testing             ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
-	-------------------------Created By BeeSting
+	--------------------Created By BeeSting
+	https://www.linkedin.com/in/md-moin-khan-emon-a8467022b/
 `
 	fmt.Println(banner)
 }
