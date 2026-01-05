@@ -5,6 +5,7 @@
 ### sudo go build -o beesting beesting.go 
 ### sudo cp beesting /usr/local/bin/ 
 ### sudo chmod +x /usr/local/bin/beesting 
+### But if you want to run this tool properly you need install all other tools. What tools need to install? That's so of them, that's why just run install.sh file which will be install all of other tools.
 
 Now ready to go run as like other tool from any directory.
 
