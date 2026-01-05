@@ -1126,6 +1126,8 @@ func customCommandManager(customCommands *[]Command) {
 		fmt.Print("\n[>] Press Enter to continue...")
 		reader.ReadString('\n')
 	}
+} // ✅ closes customCommandManager
+
 
 func main() {
 	printBanner()
