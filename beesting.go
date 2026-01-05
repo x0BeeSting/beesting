@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -530,7 +533,8 @@ func displayMenu() {
 	fmt.Println("    3. Search by keyword")
 	fmt.Println("    4. Run a command")
 	fmt.Println("    5. Batch execution mode")
-	fmt.Println("    6. Exit")
+	fmt.Println("    6. Custom command manager")
+	fmt.Println("    7. Exit")
 	fmt.Print("\n[>] Your choice: ")
 }
 
@@ -833,11 +837,312 @@ func batchExecution(commands []Command) {
 	fmt.Printf("    Total: %d\n", len(selectedCommands))
 }
 
+func getCustomCommandsFile() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ".beesting_custom_commands.json"
+	}
+	return filepath.Join(homeDir, ".beesting_custom_commands.json")
+}
+
+func loadCustomCommands() []Command {
+	filePath := getCustomCommandsFile()
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return []Command{}
+	}
+	
+	var customCommands []Command
+	err = json.Unmarshal(data, &customCommands)
+	if err != nil {
+		fmt.Printf("[!] Error loading custom commands: %v\n", err)
+		return []Command{}
+	}
+	
+	return customCommands
+}
+
+func saveCustomCommands(customCommands []Command) error {
+	filePath := getCustomCommandsFile()
+	data, err := json.MarshalIndent(customCommands, "", "  ")
+	if err != nil {
+		return err
+	}
+	
+	return ioutil.WriteFile(filePath, data, 0644)
+}
+
+func addCustomCommand() Command {
+	reader := bufio.NewReader(os.Stdin)
+	
+	fmt.Println("\n[+] Add New Custom Command")
+	fmt.Println(strings.Repeat("-", 80))
+	
+	fmt.Print("\n[>] Enter category: ")
+	category, _ := reader.ReadString('\n')
+	category = strings.TrimSpace(category)
+	
+	fmt.Print("[>] Enter description: ")
+	description, _ := reader.ReadString('\n')
+	description = strings.TrimSpace(description)
+	
+	fmt.Print("[>] Enter command: ")
+	command, _ := reader.ReadString('\n')
+	command = strings.TrimSpace(command)
+	
+	fmt.Println("\n[+] Custom command created:")
+	fmt.Printf("    Category: %s\n", category)
+	fmt.Printf("    Description: %s\n", description)
+	fmt.Printf("    Command: %s\n", command)
+	
+	return Command{
+		Category:    category,
+		Description: description,
+		Command:     command,
+	}
+}
+
+func editCustomCommand(cmd Command) Command {
+	reader := bufio.NewReader(os.Stdin)
+	
+	fmt.Println("\n[+] Edit Custom Command")
+	fmt.Println(strings.Repeat("-", 80))
+	
+	fmt.Printf("\n[>] Enter new category (current: %s) [press Enter to keep]: ", cmd.Category)
+	category, _ := reader.ReadString('\n')
+	category = strings.TrimSpace(category)
+	if category == "" {
+		category = cmd.Category
+	}
+	
+	fmt.Printf("[>] Enter new description (current: %s) [press Enter to keep]: ", cmd.Description)
+	description, _ := reader.ReadString('\n')
+	description = strings.TrimSpace(description)
+	if description == "" {
+		description = cmd.Description
+	}
+	
+	fmt.Printf("[>] Enter new command (current: %s) [press Enter to keep]: ", cmd.Command)
+	command, _ := reader.ReadString('\n')
+	command = strings.TrimSpace(command)
+	if command == "" {
+		command = cmd.Command
+	}
+	
+	fmt.Println("\n[+] Custom command updated:")
+	fmt.Printf("    Category: %s\n", category)
+	fmt.Printf("    Description: %s\n", description)
+	fmt.Printf("    Command: %s\n", command)
+	
+	return Command{
+		Category:    category,
+		Description: description,
+		Command:     command,
+	}
+}
+
+func customCommandManager(customCommands *[]Command) {
+	reader := bufio.NewReader(os.Stdin)
+	
+	for {
+		fmt.Println("\n" + strings.Repeat("=", 80))
+		fmt.Println("🔧 CUSTOM COMMAND MANAGER")
+		fmt.Println(strings.Repeat("=", 80))
+		fmt.Println("\n[+] Options:")
+		fmt.Println("    1. View custom commands")
+		fmt.Println("    2. Add custom command")
+		fmt.Println("    3. Edit custom command")
+		fmt.Println("    4. Delete custom command")
+		fmt.Println("    5. Export custom commands")
+		fmt.Println("    6. Import custom commands")
+		fmt.Println("    7. Back to main menu")
+		fmt.Print("\n[>] Your choice: ")
+		
+		choice, _ := reader.ReadString('\n')
+		choice = strings.TrimSpace(choice)
+		
+		switch choice {
+		case "1":
+			// View custom commands
+			if len(*customCommands) == 0 {
+				fmt.Println("\n[!] No custom commands found")
+			} else {
+				fmt.Printf("\n[+] Total custom commands: %d\n", len(*customCommands))
+				fmt.Println(strings.Repeat("-", 80))
+				for i, cmd := range *customCommands {
+					fmt.Printf("\n[%d] Category: %s\n", i+1, cmd.Category)
+					fmt.Printf("    Description: %s\n", cmd.Description)
+					fmt.Printf("    Command: %s\n", cmd.Command)
+				}
+			}
+			
+		case "2":
+			// Add custom command
+			newCmd := addCustomCommand()
+			*customCommands = append(*customCommands, newCmd)
+			err := saveCustomCommands(*customCommands)
+			if err != nil {
+				fmt.Printf("[!] Error saving: %v\n", err)
+			} else {
+				fmt.Println("\n[✓] Custom command added successfully!")
+			}
+			
+		case "3":
+			// Edit custom command
+			if len(*customCommands) == 0 {
+				fmt.Println("\n[!] No custom commands to edit")
+				break
+			}
+			
+			fmt.Println("\n[+] Custom commands:")
+			for i, cmd := range *customCommands {
+				fmt.Printf("    [%d] %s - %s\n", i+1, cmd.Category, cmd.Description)
+			}
+			
+			fmt.Print("\n[>] Enter command number to edit: ")
+			numStr, _ := reader.ReadString('\n')
+			numStr = strings.TrimSpace(numStr)
+			num, err := strconv.Atoi(numStr)
+			
+			if err != nil || num < 1 || num > len(*customCommands) {
+				fmt.Println("[!] Invalid command number")
+				break
+			}
+			
+			(*customCommands)[num-1] = editCustomCommand((*customCommands)[num-1])
+			err = saveCustomCommands(*customCommands)
+			if err != nil {
+				fmt.Printf("[!] Error saving: %v\n", err)
+			} else {
+				fmt.Println("\n[✓] Custom command updated successfully!")
+			}
+			
+		case "4":
+			// Delete custom command
+			if len(*customCommands) == 0 {
+				fmt.Println("\n[!] No custom commands to delete")
+				break
+			}
+			
+			fmt.Println("\n[+] Custom commands:")
+			for i, cmd := range *customCommands {
+				fmt.Printf("    [%d] %s - %s\n", i+1, cmd.Category, cmd.Description)
+			}
+			
+			fmt.Print("\n[>] Enter command number to delete: ")
+			numStr, _ := reader.ReadString('\n')
+			numStr = strings.TrimSpace(numStr)
+			num, err := strconv.Atoi(numStr)
+			
+			if err != nil || num < 1 || num > len(*customCommands) {
+				fmt.Println("[!] Invalid command number")
+				break
+			}
+			
+			fmt.Printf("\n[?] Delete command '%s'? (y/n): ", (*customCommands)[num-1].Description)
+			confirm, _ := reader.ReadString('\n')
+			confirm = strings.ToLower(strings.TrimSpace(confirm))
+			
+			if confirm == "y" || confirm == "yes" {
+				*customCommands = append((*customCommands)[:num-1], (*customCommands)[num:]...)
+				err = saveCustomCommands(*customCommands)
+				if err != nil {
+					fmt.Printf("[!] Error saving: %v\n", err)
+				} else {
+					fmt.Println("\n[✓] Custom command deleted successfully!")
+				}
+			} else {
+				fmt.Println("[!] Deletion cancelled")
+			}
+			
+		case "5":
+			// Export custom commands
+			if len(*customCommands) == 0 {
+				fmt.Println("\n[!] No custom commands to export")
+				break
+			}
+			
+			fmt.Print("\n[>] Enter export file name (e.g., my_commands.json): ")
+			fileName, _ := reader.ReadString('\n')
+			fileName = strings.TrimSpace(fileName)
+			
+			if fileName == "" {
+				fileName = "beesting_export.json"
+			}
+			
+			data, _ := json.MarshalIndent(*customCommands, "", "  ")
+			err := ioutil.WriteFile(fileName, data, 0644)
+			if err != nil {
+				fmt.Printf("[!] Error exporting: %v\n", err)
+			} else {
+				fmt.Printf("\n[✓] Exported %d commands to %s\n", len(*customCommands), fileName)
+			}
+			
+		case "6":
+			// Import custom commands
+			fmt.Print("\n[>] Enter import file name: ")
+			fileName, _ := reader.ReadString('\n')
+			fileName = strings.TrimSpace(fileName)
+			
+			data, err := ioutil.ReadFile(fileName)
+			if err != nil {
+				fmt.Printf("[!] Error reading file: %v\n", err)
+				break
+			}
+			
+			var importedCommands []Command
+			err = json.Unmarshal(data, &importedCommands)
+			if err != nil {
+				fmt.Printf("[!] Error parsing file: %v\n", err)
+				break
+			}
+			
+			fmt.Printf("\n[+] Found %d commands in file\n", len(importedCommands))
+			fmt.Print("[?] Append to existing commands? (y/n): ")
+			append_choice, _ := reader.ReadString('\n')
+			append_choice = strings.ToLower(strings.TrimSpace(append_choice))
+			
+			if append_choice == "y" || append_choice == "yes" {
+				*customCommands = append(*customCommands, importedCommands...)
+			} else {
+				*customCommands = importedCommands
+			}
+			
+			err = saveCustomCommands(*customCommands)
+			if err != nil {
+				fmt.Printf("[!] Error saving: %v\n", err)
+			} else {
+				fmt.Printf("\n[✓] Imported successfully! Total commands: %d\n", len(*customCommands))
+			}
+			
+		case "7":
+			return
+			
+		default:
+			fmt.Println("\n[!] Invalid choice")
+		}
+		
+		fmt.Print("\n[>] Press Enter to continue...")
+		reader.ReadString('\n')
+	}
+
 func main() {
 	printBanner()
-	commands := getCommands()
 	
-	fmt.Printf("\n[+] Loaded %d penetration testing one-liners\n", len(commands))
+	// Load built-in commands
+	builtInCommands := getCommands()
+	
+	// Load custom commands
+	customCommands := loadCustomCommands()
+	
+	// Merge commands
+	allCommands := append(builtInCommands, customCommands...)
+	
+	fmt.Printf("\n[+] Loaded %d built-in commands\n", len(builtInCommands))
+	if len(customCommands) > 0 {
+		fmt.Printf("[+] Loaded %d custom commands\n", len(customCommands))
+	}
+	fmt.Printf("[+] Total commands available: %d\n", len(allCommands))
 	fmt.Println("[+] Remember: Use these commands only on systems you have permission to test!")
 	
 	reader := bufio.NewReader(os.Stdin)
@@ -849,16 +1154,20 @@ func main() {
 		
 		switch choice {
 		case "1":
-			showAllCommands(commands)
+			showAllCommands(allCommands)
 		case "2":
-			filterByCategory(commands)
+			filterByCategory(allCommands)
 		case "3":
-			searchByKeyword(commands)
+			searchByKeyword(allCommands)
 		case "4":
-			runCommand(commands)
+			runCommand(allCommands)
 		case "5":
-			batchExecution(commands)
+			batchExecution(allCommands)
 		case "6":
+			customCommandManager(&customCommands)
+			// Reload all commands after custom command changes
+			allCommands = append(builtInCommands, customCommands...)
+		case "7":
 			fmt.Println("\n[+] Thank you for using BeeSting! Stay ethical! 🐝\n")
 			os.Exit(0)
 		default:
